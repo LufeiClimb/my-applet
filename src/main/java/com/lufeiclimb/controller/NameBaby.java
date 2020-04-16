@@ -36,7 +36,7 @@ import java.util.concurrent.*;
  * @date 2020/3/13 12:21
  * @since 1.8
  */
-@Api(value = "/nameBaby")
+@Api(value = "/nameBaby", tags = "起名")
 @RestController
 @RequestMapping("/nameBaby")
 public class NameBaby {

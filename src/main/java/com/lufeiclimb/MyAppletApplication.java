@@ -9,12 +9,12 @@ import org.springframework.core.env.Environment;
 
 @SpringBootApplication
 @EnableConfigurationProperties
-public class NameBabyApplication {
+public class MyAppletApplication {
 
-    private static final Logger log = LoggerFactory.getLogger(NameBabyApplication.class);
+    private static final Logger log = LoggerFactory.getLogger(MyAppletApplication.class);
 
     public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(NameBabyApplication.class);
+        SpringApplication app = new SpringApplication(MyAppletApplication.class);
         Environment env = app.run(args).getEnvironment();
         log.info(
                 "\n----------------------------------------------------------\n\t"

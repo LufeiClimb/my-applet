@@ -26,7 +26,7 @@ public class SwaggerConfig {
                 .apiInfo(apiInfo())
                 .useDefaultResponseMessages(false)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("com.namebaby"))
+                .apis(RequestHandlerSelectors.basePackage("com.lufeiclimb"))
                 .paths(PathSelectors.any())
                 .build();
     }

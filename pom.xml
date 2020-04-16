@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.lufeiclimb</groupId>
-    <artifactId>nameBaby</artifactId>
+    <artifactId>my-applet</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>NameYourBaby</name>
-    <description>name your Baby</description>
+    <name>my applets</name>
+    <description>all my applet</description>
 
     <properties>
         <java.version>1.8</java.version>
