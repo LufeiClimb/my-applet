@@ -5,12 +5,18 @@ import com.alibaba.fastjson.JSONObject;
 import com.lufeiclimb.utils.HttpUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * 我的基金的最新净值
@@ -27,19 +33,29 @@ public class ZuiXinJingZhi {
 
     public static void main(String[] args) {
         ZuiXinJingZhi zuiXinJingZhi = new ZuiXinJingZhi();
-        zuiXinJingZhi.zuiXin();
+        zuiXinJingZhi.test();
+    }
+    public void test() {
+        ZuiXinJingZhi zuiXinJingZhi = new ZuiXinJingZhi();
+        // System.out.println("净值");
+        // zuiXinJingZhi.jingZhi();
+
+        System.out.println("估值");
+        zuiXinJingZhi.guZhi();
     }
 
-    @GetMapping("/zuiXin")
-    @ApiOperation(value = "最新净值")
-    public List<String> zuiXin(){
+    @GetMapping("/guZhi")
+    @ApiOperation(value = "最新估值")
+    public List<String> guZhi() {
 
         List<String> re = new ArrayList<>();
         JSONObject param = new JSONObject();
         param.put("jjdmstr", "110022,160632,161725,519933,000248,000961,001548,008173");
         String s =
                 HttpUtil.httpForm(
-                        "https://www.howbuy.com/fund/ajax/gmfund/fundnetestimatejson.htm", param);
+                        "https://www.howbuy.com/fund/ajax/gmfund/fundnetestimatejson.htm",
+                        param,
+                        null);
 
         JSONArray jsonArray = JSONArray.parseArray(s);
         jsonArray.sort(
@@ -53,6 +69,45 @@ public class ZuiXinJingZhi {
             // System.out.println(a.getString("jjjc"));
             System.out.println(a.getString("valuation"));
             re.add(a.getString("valuation"));
+        }
+        return re;
+    }
+
+    @GetMapping("/jingZhi")
+    @ApiOperation(value = "最新净值")
+    public List<String> jingZhi() {
+
+        List<String> re = new ArrayList<>();
+        JSONObject param = new JSONObject();
+        // param.put("tabType", "2");
+        String cookie =
+"__hutmz=268394641.1585122498.1.1.hutmcsr=(direct)|hutmccn=(direct)|hutmcmd=(none); __hutmmobile=F5C45DCC-405E-45DB-84EE-CFB365AAF197; _ga=GA1.2.1873930785.1585122498; selectedFeatureType=lx; USER_INFO_COOKIE=8013087048; USER_SALT_COOKIE=6cd638adfe6a18ee3f6ea1a41aee636d; FUNDID_COOKIE=COOKIE20200401000001205771; SESSION=10393d71-88e1-4ec2-8336-fcbdc39d1663; __hutmc=268394641; Hm_lvt_394e04be1e3004f9ae789345b827e8e2=1585122498,1585723127,1586327428; _hb_ref_pgid=11010; _hb_pgid=; welcome_fund_attention=true; GM_COMPARE_COOKIE=003741B519746B519933B008173; GM_VISIT_COOKIE=008173%2C519933%2C009058%2C001548%2C161725%2C003741%2C006147%2C006985; _gid=GA1.2.768083053.1587029184; __hutma=268394641.783161955.1585122498.1587089178.1587105163.22; __hutmb=268394641.1.10.1587105163; Hm_lpvt_394e04be1e3004f9ae789345b827e8e2=1587105164; OZ_SI_1497=sTime=1586327427&sIndex=613; OZ_1U_1497=vid=ve7b0cc121a2b8.0&ctime=1587105336&ltime=1587105333; OZ_1Y_1497=erefer=-&eurl=https%3A//www.howbuy.com/fundtool/filter.htm&etime=1586327427&ctime=1587105336&ltime=1587105333&compid=1497"
+                ;
+                String formResult =
+                HttpUtil.httpForm(
+                        "https://www.howbuy.com/fund/ajax/fundtool/findopenfund.htm",
+                        param,
+                        cookie);
+
+        Document totalDoc = Jsoup.parse(formResult);
+        Elements elements = totalDoc.getAllElements();
+        String text = elements.text();
+        text = text.replaceAll("[ 盈亏备注删除]", "");
+        String[] splits = text.split("购买");
+        Set<String> all = new TreeSet<>(Arrays.asList(splits));
+        Set<String> a = new TreeSet<>();
+        for (String split : all) {
+            String temp = split.substring(0, split.indexOf("("));
+            if (temp.contains(".")) {
+                String daiMa = temp.substring(0, 6);
+                String jingZhi = temp.substring(temp.lastIndexOf("-") + 1);
+                a.add(daiMa + "-" + jingZhi);
+                // System.out.println(daiMa + "-" + jingZhi);
+            }
+        }
+
+        for (String s : a) {
+            System.out.println(s.substring(s.lastIndexOf("-") + 1));
         }
         return re;
     }

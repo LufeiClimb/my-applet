@@ -73,7 +73,8 @@ public class NameBaby {
             @RequestParam @ApiParam(required = true, value = "姓") String surname,
             @RequestParam
                     @ApiParam(
-                            required = true, defaultValue =
+                            required = true,
+                            defaultValue =
                                     "钰昊心兴阳羽凯宏伟辉凌霄明彦晏筱颜瑞文一贤其烁君博天熙泽浩逸汝云柏川铭子帅伟璟旭东乐灏征朗涵晗奇星柯喆哲然品玥宇宏佑赫源辰鑫思文涵卫轩梓新译俊跃杰奕凡延纬靳笙晓童钧沐景煜恺")
                     String words,
             @RequestParam @ApiParam(defaultValue = "true", value = "是否计算五行") boolean wuxing,
@@ -118,7 +119,13 @@ public class NameBaby {
     @ApiOperation(value = "从 www.qmsjmfb.com 网站上生成")
     public Integer fromNet(
             @RequestParam @ApiParam(required = true, value = "姓") String surname,
-            @RequestParam @ApiParam(required = true, defaultValue = "nan", value = "性别", allowableValues = "nan, nv") String sex,
+            @RequestParam
+                    @ApiParam(
+                            required = true,
+                            defaultValue = "nan",
+                            value = "性别",
+                            allowableValues = "nan, nv")
+                    String sex,
             @RequestParam @ApiParam(defaultValue = "true", value = "是否计算五行") boolean wuxing,
             @RequestParam @ApiParam(defaultValue = "false", value = "排除三才五格为凶的名字")
                     boolean xiongPaichu)
@@ -135,7 +142,7 @@ public class NameBaby {
         param.put("sex", sex);
         param.put("dic", "default"); // default 3040 5060 8090 0010 gudai ganzhi
         param.put("num", "2000");
-        String formResult = HttpUtil.httpForm(httpUrl, param);
+        String formResult = HttpUtil.httpForm(httpUrl, param, null);
 
         Document totalDoc = Jsoup.parse(formResult);
         Elements small = totalDoc.select("ul[class=name_show]").select("li");

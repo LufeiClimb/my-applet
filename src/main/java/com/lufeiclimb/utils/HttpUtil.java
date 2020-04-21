@@ -2,6 +2,7 @@ package com.lufeiclimb.utils;
 
 
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.AbstractExecutionAwareRequest;
@@ -224,7 +225,7 @@ public class HttpUtil {
         }
     }
 
-    public static String httpForm(String httpUrl, JSONObject param) {
+    public static String httpForm(String httpUrl, JSONObject param, String cookie) {
         String formResult = null;
         HttpURLConnection connection = null;
         InputStream is = null;
@@ -245,6 +246,9 @@ public class HttpUtil {
             connection.setDoOutput(true);
             // 设置传入参数的格式:请求参数应该是 name1=value1&name2=value2 的形式。
             connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            if (StringUtils.isNotBlank(cookie)) {
+                connection.setRequestProperty("Cookie", cookie);
+            }
             // 设置鉴权信息：Authorization: Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0
             // connection.setRequestProperty("Authorization", "Bearer
             // da3efcbf-0845-4fe3-8aba-ee040be542c0");
