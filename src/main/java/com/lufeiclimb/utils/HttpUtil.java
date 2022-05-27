@@ -1,19 +1,21 @@
 package com.lufeiclimb.utils;
 
-
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.AbstractExecutionAwareRequest;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +52,6 @@ import java.util.Objects;
  * @since 1.8
  */
 public class HttpUtil {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpUtil.class);
 
     // 默认链接超时时间
@@ -60,7 +61,7 @@ public class HttpUtil {
     // 默认链接请求超时时间
     private static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT = 60000;
 
-   /**
+    /**
      * post 请求
      *
      * @param url url地址
@@ -135,6 +136,125 @@ public class HttpUtil {
                 false);
     }
 
+    public static String httpsGet(
+            String url,
+            JSONObject param,
+            Map<String, String> headers)
+            throws IOException {
+        return get(
+                url,
+                param,
+                false,
+                headers,
+                DEFAULT_CONNECT_TIMEOUT,
+                DEFAULT_SOCKET_TIMEOUT,
+                DEFAULT_CONNECTION_REQUEST_TIMEOUT,
+                false);
+    }
+
+    /**
+     * get 请求
+     *
+     * @param url url地址
+     * @param param 参数
+     * @param headers 请求头
+     * @param connectTimeout 链接超时时间
+     * @param socketTimeout 网络超时时间
+     * @param connectionRequestTimeout 链接请求超时时间
+     * @param ignoreSsl 是否忽略证书
+     * @return get
+     * @throws IOException exception
+     */
+    public static String get(
+            String url,
+            JSONObject param,
+            boolean paramsEncode,
+            Map<String, String> headers,
+            int connectTimeout,
+            int socketTimeout,
+            int connectionRequestTimeout,
+            boolean ignoreSsl)
+            throws IOException {
+        // 获取链接
+        CloseableHttpClient client = null;
+        if (ignoreSsl) {
+            client = HttpClients.createDefault();
+        } else {
+            client = createSSLClientDefault();
+        }
+        // 参数封装
+        String params;
+        if (paramsEncode) {
+            params = httpGetByEncode(param);
+        } else {
+            params = map2String(param);
+        }
+        String uri = url + (url.contains("?") ? "&" : "?") + params;
+        LOGGER.info("请求地址uri={}", uri);
+        HttpGet httpGet = new HttpGet(uri);
+        // 设置超时时间
+        httpGet.setConfig(
+                getRequestConfig(connectTimeout, socketTimeout, connectionRequestTimeout));
+        // 设置请求头
+        setHeader(httpGet, headers);
+        String respContent = null;
+        // 执行链接
+        CloseableHttpResponse resp = null;
+        try {
+            resp = client.execute(httpGet);
+            LOGGER.info("get请求返回接口结果：{}" + resp);
+            if (resp.getStatusLine().getStatusCode() == 200) {
+                HttpEntity he = resp.getEntity();
+                respContent = EntityUtils.toString(he, "UTF-8");
+            }
+        } catch (IOException e) {
+            LOGGER.error("GET请求执行方法报错" + e);
+        } finally {
+            if (resp != null) {
+                resp.close();
+            }
+            client.close();
+        }
+        return respContent;
+    }
+
+    private static String httpGetByEncode(Map<String, Object> map) {
+        List<BasicNameValuePair> params = new ArrayList<>();
+
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (entry.getValue() != null) {
+                BasicNameValuePair nameValuePair =
+                        new BasicNameValuePair(entry.getKey(), entry.getValue().toString());
+                params.add(nameValuePair);
+            }
+        }
+        String queryString = URLEncodedUtils.format(params, "UTF-8");
+
+        if (StringUtils.isBlank(queryString)) {
+            return "";
+        } else {
+            return queryString;
+        }
+    }
+
+    /**
+     * get方法生成参数
+     *
+     * @param param
+     * @return
+     */
+    private static String map2String(JSONObject param) {
+        if (param != null && param.size() > 0) {
+            StringBuilder params = new StringBuilder();
+            for (Map.Entry<String, Object> entry : param.entrySet()) {
+                params.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
+            }
+            return params.toString();
+        } else {
+            return "";
+        }
+    }
+
     /**
      * 设置链接超时时间
      *
@@ -203,26 +323,6 @@ public class HttpUtil {
             LOGGER.error("Create SSL Error", e);
         }
         return Objects.requireNonNull(sslcontext);
-    }
-
-    /**
-     * 自定义私有类
-     *
-     * @author haow
-     */
-    static class TrustAnyTrustManager implements X509TrustManager {
-        @Override
-        public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
-                throws CertificateException {}
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
-                throws CertificateException {}
-
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
     }
 
     public static String httpForm(String httpUrl, JSONObject param, String cookie) {
@@ -324,4 +424,23 @@ public class HttpUtil {
         return prestr.toString();
     }
 
+    /**
+     * 自定义私有类
+     *
+     * @author haow
+     */
+    static class TrustAnyTrustManager implements X509TrustManager {
+        @Override
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
+                throws CertificateException {}
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
+                throws CertificateException {}
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+    }
 }
